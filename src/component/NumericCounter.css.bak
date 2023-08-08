@@ -1,0 +1,39 @@
+.numeric-counter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  gap: 10px;
+}
+
+.triangle-button {
+  position: relative;
+  border: none;
+  background-color: transparent;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+.triangle-left,
+.triangle-right {
+  position: absolute;
+  width: 0;
+  height: 0;
+  border-style: solid;
+}
+
+.triangle-left {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(135deg);
+  border-width: 5px 8px 5px 0;
+  border-color: transparent #000 transparent transparent;
+}
+
+.triangle-right {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-45deg);
+  border-width: 5px 0 5px 8px;
+  border-color: transparent transparent transparent #000;
+}

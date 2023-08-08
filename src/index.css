@@ -1,0 +1,22 @@
+@font-face {
+  font-family: "Plantin";
+  src: local("Plantin") url("/fonts/PlantinRoman.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Plantin";
+  src: local("Plantin") url("/fonts/PlantinRomanItalic") format("ttf");
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "Plantin";
+  src: local("Plantin") url("/fonts/PlantinSemibold") format("opentype");
+  font-weight: 600;
+}
+
+@font-face {
+  font-family: "Beleren";
+  src: url('/fonts/Beleren.ttf') format("truetype");
+}
+
