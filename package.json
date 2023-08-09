@@ -21,6 +21,7 @@
     "react-dom": "^18.2.0",
     "react-query": "^3.39.3",
     "use-debounce": "^9.0.4",
+    "use-fit-text": "^2.4.0",
     "use-immer": "^0.9.0",
     "wouter": "^2.11.0"
   },
