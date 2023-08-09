@@ -44,11 +44,15 @@ const CardListItem: FC<{
     <ListItem
       sx={{
         "--ListItem-paddingLeft": 0,
+        "--ListItem-paddingRight": 0,
         "--ListItem-paddingY": 0,
-        pr: 2,
         display: "flex",
         flexDirection: "row",
         alignItems: "stretch",
+        mb: '1px',
+        "&:last-of-type": {
+          mb: 0,
+        }
       }}
     >
       <ArrowButton onClick={onDecrement}>

@@ -1,27 +1,34 @@
+import { FolderOpen, MoreVert, Print, Save } from "@mui/icons-material";
 import {
   Autocomplete,
   Box,
-  Button,
   Container,
+  Dropdown,
   Grid,
+  IconButton,
+  ListItemDecorator,
+  Menu,
+  MenuButton,
+  MenuItem,
   Sheet,
-  Stack,
   Typography,
 } from "@mui/joy";
 import { FC, useMemo, useState } from "react";
 import { useQuery } from "react-query";
 import { useDebounce } from "use-debounce";
+import { useImmer } from "use-immer";
 import * as Scryfall from "./api/scryfall";
 import { CardList } from "./component/CardList";
 import { DisplayCard } from "./component/DisplayCard";
-import { useImmer } from "use-immer";
 import { Entry, parseGeneric } from "./types/generic";
+import { useLocation } from "wouter";
 
 export const App: FC = () => {
   const [value, setValue] = useState<string | null>("Stormwing Entity");
   const [inputValue, setInputValue] = useState("");
   const [debouncedValue] = useDebounce(inputValue, 300);
   const [cardList, setCardList] = useImmer<Entry[]>([]);
+  const [location, setLocation] = useLocation();
 
   const autocompleteQuery = useQuery(
     ["autocomplete", debouncedValue],
@@ -76,6 +83,7 @@ export const App: FC = () => {
   };
 
   const print = () => {
+    setLocation('/print');
     // goto print page;
   };
 
@@ -93,7 +101,7 @@ export const App: FC = () => {
           alignItems: "center",
           justifyContent: "space-between",
           p: 2,
-          mb: 4,
+          mb: 2,
           gap: 4,
         }}
       >
@@ -110,19 +118,54 @@ export const App: FC = () => {
             setValue(updated);
           }}
           onInputChange={(_, updated) => setInputValue(updated)}
-          sx={{
+          sx={(theme) => ({
             width: "500px",
-          }}
+            [theme.breakpoints.down("md")]: {
+              display: "none",
+            },
+          })}
         />
-        <Stack direction="row" spacing={1}>
-          <Button onClick={print}>Print</Button>
-          <Button onClick={saveState}>Save</Button>
-          <Button onClick={loadState}>Load</Button>
-        </Stack>
+
+        <Dropdown>
+          <MenuButton slots={{ root: IconButton }} slotProps={{}}>
+            <MoreVert sx={{ fontSize: "24px" }} />
+            <Menu placement="bottom-end">
+              <MenuItem onClick={saveState}>
+                <ListItemDecorator>
+                  <Save />
+                </ListItemDecorator>{" "}
+                Save list
+              </MenuItem>
+              <MenuItem onClick={loadState}>
+                <ListItemDecorator>
+                  <FolderOpen />
+                </ListItemDecorator>{" "}
+                Load list
+              </MenuItem>
+              <MenuItem onClick={print}>
+                <ListItemDecorator>
+                  <Print />
+                </ListItemDecorator>{" "}
+                Print
+              </MenuItem>
+            </Menu>
+          </MenuButton>
+        </Dropdown>
       </Sheet>
       <Container>
+        <Autocomplete
+          options={autocompleteQuery.data?.data ?? []}
+          filterOptions={(x) => x}
+          autoComplete
+          getOptionLabel={(x) => x}
+          onChange={(_, updated) => {
+            setValue(updated);
+          }}
+          onInputChange={(_, updated) => setInputValue(updated)}
+          sx={{ mb: 2 }}
+        />
         <Grid container spacing={2}>
-          <Grid xs={0} sm={3}>
+          <Grid xs={12} md={3}>
             <Box sx={{ boxShadow: "lg", borderRadius: "4.75% / 3.5%" }}>
               <img
                 src={card?.imageUri.full}
@@ -130,7 +173,7 @@ export const App: FC = () => {
               />
             </Box>
           </Grid>
-          <Grid xs={12} sm={3}>
+          <Grid xs={12} md={3}>
             {cardQuery.status === "success" && card && (
               <DisplayCard
                 data={card}
@@ -139,7 +182,7 @@ export const App: FC = () => {
               />
             )}
           </Grid>
-          <Grid xs={12} sm={6}>
+          <Grid xs={12} md={6}>
             <CardList
               data={cardList}
               setData={setCardList}

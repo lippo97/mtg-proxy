@@ -1,8 +1,8 @@
 import { Button, styled } from "@mui/joy";
 
 export const ArrowButton = styled(Button)({
-  width: '20px',
-  height: '20px',
+  width: '10px',
+  height: '10px',
   background: 'unset',
   color: 'black',
   '&:hover': {
@@ -12,6 +12,6 @@ export const ArrowButton = styled(Button)({
     background: 'unset',
   },
   '& > MuiSvgIcon-root': {
-    color: 'black'
+    color: 'black',
   }
 })
