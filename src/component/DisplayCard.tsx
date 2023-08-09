@@ -8,10 +8,15 @@ import { Symbol } from "./Symbol";
 
 interface DisplayCardProps {
   readonly data: Card;
-  handleAddCard(): void;
+  readonly addCardDisabled?: boolean;
+  handleAddCard?(): void;
 }
 
-export const DisplayCard: FC<DisplayCardProps> = ({ data, handleAddCard }) => {
+export const DisplayCard: FC<DisplayCardProps> = ({
+  addCardDisabled,
+  data,
+  handleAddCard,
+}) => {
   const { manaCost, bodyText } = data;
 
   const BottomLine = () => {
@@ -37,54 +42,51 @@ export const DisplayCard: FC<DisplayCardProps> = ({ data, handleAddCard }) => {
   };
 
   return (
-    <Stack direction="row">
-      <Box sx={{ boxShadow: "lg", borderRadius: "4.75% / 3.5%" }}>
-        <img
-          src={data.imageUri.full}
-          style={{ display: "block", borderRadius: "4.75% / 3.5%" }}
-        />
-      </Box>
-      <Box maxWidth={350} py={4} px={2}>
-        <Box
-          sx={{
-            border: "1px solid rgba(0,0,0,0.1)",
-            borderRadius: "4px",
-            borderTop: "3px solid black",
-            borderBottom: "3px solid black",
-            boxShadow: "xs",
-            "& > *": {
-              borderBottom: "1px solid rgba(0,0,0,0.1)",
-              px: 1,
-              py: 0.5,
-            },
-          }}
-        >
-          <Stack direction="row" justifyContent="space-between">
-            <Typography fontFamily="Beleren">{data.name}</Typography>
-            <Stack direction="row" alignItems="center">
-              {manaCost &&
-                manaCost.map((x, i) => (
-                  <Symbol key={i} kind={x as unknown as Color} shadow />
-                ))}
-            </Stack>
+    <Box maxWidth={350}>
+      <Box
+        sx={{
+          border: "1px solid rgba(0,0,0,0.1)",
+          borderRadius: "4px",
+          borderTop: "3px solid black",
+          borderBottom: "3px solid black",
+          boxShadow: "xs",
+          "& > *": {
+            borderBottom: "1px solid rgba(0,0,0,0.1)",
+            px: 1,
+            py: 0.5,
+          },
+        }}
+      >
+        <Stack direction="row" justifyContent="space-between">
+          <Typography fontFamily="Beleren">{data.name}</Typography>
+          <Stack direction="row" alignItems="center">
+            {manaCost &&
+              manaCost.map((x, i) => (
+                <Symbol key={i} kind={x as unknown as Color} shadow />
+              ))}
           </Stack>
-          <Typography fontFamily="Plantin" fontWeight={600}>
-            {data.typeLine}
-          </Typography>
-          <Box>
-            {bodyText.map((p, i) => (
-              <BodyLine key={i} data={p} />
-            ))}
-            <BottomLine />
-          </Box>
-          <Box>
-            <LegalitiesTable data={data.legalities} />
-          </Box>
+        </Stack>
+        <Typography fontFamily="Plantin" fontWeight={600}>
+          {data.typeLine}
+        </Typography>
+        <Box>
+          {bodyText.map((p, i) => (
+            <BodyLine key={i} data={p} />
+          ))}
+          <BottomLine />
         </Box>
-        <Button fullWidth sx={{ mt: 2 }} onClick={handleAddCard}>
-          Add to list
-        </Button>
+        <Box>
+          <LegalitiesTable data={data.legalities} />
+        </Box>
       </Box>
-    </Stack>
+      <Button
+        fullWidth
+        sx={{ mt: 2 }}
+        onClick={handleAddCard}
+        disabled={addCardDisabled}
+      >
+        Add to list
+      </Button>
+    </Box>
   );
 };

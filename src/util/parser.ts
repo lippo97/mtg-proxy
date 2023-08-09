@@ -11,7 +11,8 @@ export type ParserResult = (
 export type ParsedToken =
 	| { type: "symbol"; value: string }
 	| { type: "text"; value: string }
-	| { type: "comma" };
+	| { type: "comma" }
+	| { type: "colon" };
 
 type FSM = "S0" | "PW0" | "PW1" | "R" | "T" | "A";
 
@@ -78,7 +79,7 @@ export function parse(tokens: Token[]): ParserResult {
 			} else if (token.type === "text" || token.type === 'symbol') {
 				state = "T";
 				T.value = [token];
-			} else if (token.type === "newline") {
+			} else if (token.type === "newline" || token.type === 'eof') {
 				/* empty */
 			} else {
 				throw new ParseError(token, ["number", "openParen", "text", "newline"]);
@@ -103,10 +104,10 @@ export function parse(tokens: Token[]): ParserResult {
 			if (token.type === "closeParen") {
 				flushR();
 				state = "S0";
-			} else if (token.type === "text" || token.type === "symbol" || token.type === 'comma') {
+			} else if (token.type === "text" || token.type === "symbol" || token.type === 'comma' || token.type === 'colon') {
 				R.value.push(token);
 			} else {
-				throw new ParseError(token, ["closeParen", "text", "symbol"]);
+				throw new ParseError(token, ["closeParen", "text", "symbol", "comma"]);
 			}
 		} else if (state === "T") {
 			if (

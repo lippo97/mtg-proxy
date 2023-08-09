@@ -20,6 +20,9 @@ export const BodyLine: FC<BodyLineProps> = ({ data }) => {
     if (data.type === "comma") {
       return ", ";
     }
+    if (data.type === 'colon') {
+      return ':';
+    }
   };
 
   const Text: FC<{ data: ParsedToken[] }> = ({ data }) =>
@@ -52,8 +55,8 @@ export const BodyLine: FC<BodyLineProps> = ({ data }) => {
             prev,
             <span className="comma">, </span>,
             curr,
-          ])}{" "}
-        :<Text data={data.value} />
+          ])}
+        :{" "}<Text data={data.value} />
       </CardTypography>
     );
   }
