@@ -16,11 +16,14 @@ body {
   width: 60.0mm;
   height: 60.0mm;
   padding: 2mm;
-  margin: 2mm;
-  border: 1px solid black;
+  border-right: 1px solid #bbb;
+  border-bottom: 1px solid #bbb;
   overflow: hidden;
-  /* Add other card styles here */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
+
 
 @page {
   size: A4;

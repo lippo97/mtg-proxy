@@ -5,6 +5,7 @@ import { Card } from "../types/generic";
 import { BodyLine } from "./BodyLine";
 import { LegalitiesTable } from "./LegalitiesTable";
 import { Symbol } from "./Symbol";
+import { BottomLine } from "./BottomLine";
 
 interface DisplayCardProps {
   readonly data: Card;
@@ -19,30 +20,8 @@ export const DisplayCard: FC<DisplayCardProps> = ({
 }) => {
   const { manaCost, bodyText } = data;
 
-  const BottomLine = () => {
-    if (data.type === "Planeswalker") {
-      return (
-        <Stack direction="row" justifyContent="flex-end">
-          <span
-            className={`ms ms-loyalty ms-loyalty-start ms-loyalty-${data.loyalty!}`}
-          />
-        </Stack>
-      );
-    }
-    if (data.type === "Creature") {
-      return (
-        <Stack direction="row" justifyContent="flex-end">
-          <Typography fontFamily="Plantin" fontWeight={600}>
-            {data.power}/{data.toughness}
-          </Typography>
-        </Stack>
-      );
-    }
-    return "";
-  };
-
   return (
-    <Box maxWidth={350}>
+    <Box>
       <Box
         sx={{
           border: "1px solid rgba(0,0,0,0.1)",
@@ -73,7 +52,7 @@ export const DisplayCard: FC<DisplayCardProps> = ({
           {bodyText.map((p, i) => (
             <BodyLine key={i} data={p} />
           ))}
-          <BottomLine />
+          <BottomLine data={data} />
         </Box>
         <Box>
           <LegalitiesTable data={data.legalities} />

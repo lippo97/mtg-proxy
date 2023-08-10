@@ -6,10 +6,11 @@ import * as Scryfall from "./scryfall";
 
 export type Entry = { card: Card; quantity: number };
 
+export type ExportEntry = [ name: string, quantity: number ];
+
 export function parseGeneric(input: Scryfall.Card): Card {
   const tokenized = tokenize(input.oracle_text);
   const parsed = parse(tokenized);
-
   /* eslint-disable @typescript-eslint/no-explicit-any */
   const shared: Pick<Card, 'name' | 'bodyText' | 'imageUri' | 'legalities' | 'typeLine' | 'colorIdentity'> = {
     name: input.name,

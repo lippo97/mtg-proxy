@@ -6,6 +6,7 @@ import { BaseColor } from "../types/colors";
 import { Entry } from "../types/generic";
 import { ArrowButton } from "./ArrowButton";
 import { Symbol } from "./Symbol";
+import { useDebounceEffect } from "../hooks/useDebounceEffect";
 
 interface CardListProps {
   readonly data: Entry[];
@@ -34,12 +35,20 @@ function calcBg(colors: BaseColor[]): string {
   }
 }
 
+
 const CardListItem: FC<{
   entry: Entry;
   onIncrement(): void;
   onDecrement(): void;
+  onRemove(): void;
   setSelected(name: string): void;
-}> = ({ entry, onDecrement, onIncrement, setSelected }) => {
+}> = ({ entry, onDecrement, onIncrement, onRemove, setSelected }) => {
+  useDebounceEffect(entry.quantity, 1000, (qty) => {
+    if (qty === 0) {
+      onRemove();
+    }
+  });
+
   return (
     <ListItem
       sx={{
@@ -52,7 +61,10 @@ const CardListItem: FC<{
         mb: '1px',
         "&:last-of-type": {
           mb: 0,
-        }
+        },
+        ...(entry.quantity === 0 && {
+          opacity: '30%'
+        })
       }}
     >
       <ArrowButton onClick={onDecrement}>
@@ -159,9 +171,14 @@ export const CardList: FC<CardListProps> = ({ data, setData, setSelected }) => {
           }
           onDecrement={() =>
             setData((data) => {
-              data[i].quantity--;
+              data[i].quantity = Math.max(data[i].quantity - 1, 0);
             })
           }
+          onRemove={() => {
+            setData((data) => {
+              data.splice(i, 1);
+            })
+          }}
           setSelected={setSelected}
         />
       ))}
