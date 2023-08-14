@@ -1,23 +1,20 @@
-import React, {
+import {
   FC,
   useContext,
-  useEffect,
   useMemo,
-  useRef,
-  useState,
 } from "react";
 import { BodyLine } from "../component/BodyLine";
 import { ManaCost } from "../component/ManaCost";
 import { CardListContext } from "../context/CardList";
-import { CardFace } from "../types/generic";
+import { Card } from "../types/generic";
 import "./print.css";
 import { BottomLine } from "../component/BottomLine";
 import { Stack, Typography, styled } from "@mui/joy";
+import { useFitText } from "../hooks/useFitText";
 
 const Name = styled(Typography)({
   fontFamily: "Beleren",
   fontSize: "9.5pt",
-  // marginBottom: "2px",
 });
 
 const Type = styled(Typography)({
@@ -27,72 +24,142 @@ const Type = styled(Typography)({
   marginBottom: "4px",
 });
 
-function useFitText2(): {
-  ref: React.RefObject<HTMLDivElement>;
-  fontSize: number;
-} {
-  const ref = useRef<HTMLDivElement>(null);
-  const [fontSize, setFontSize] = useState(9.5);
+const CardDisplay: FC<{ card: Card }> = ({ card }) => {
+  const { fontSize, ref } = useFitText();
 
-  useEffect(() => {
-    const isOverflow =
-      !!ref.current &&
-      (ref.current.scrollHeight > ref.current.offsetHeight);
-    if (isOverflow) {
-      setFontSize(x => x - 0.5);
-    }
-  }, [ref, fontSize]);
-  return { ref, fontSize };
-}
-
-const CardDisplay: FC<{ card: CardFace }> = ({ card }) => {
-  const { name, manaCost, bodyText, typeLine } = card;
-  // const { fontSize, ref } = useFitText({ maxFontSize: 95, minFontSize: 60 });
-  const { fontSize, ref } = useFitText2();
-
-  return (
-    <div className="card" ref={ref}>
-      <div className="topSide">
-        <Stack direction="row" justifyContent="space-between" alignItems="center">
-          <Name>{name}</Name>
-          {manaCost && (
-            <Stack
-            direction='row'
-            justifyContent="end"
-            alignItems="start"
-              sx={{
-                "& > .ms-cost": {
-                  fontSize: "10px",
-                },
-              }}
-            >
-              <ManaCost mana={manaCost} />
-            </Stack>
-          )}
-        </Stack>
-        <Type>{typeLine}</Type>
-        <div>
-          {bodyText.map((p, i) => (
-            <BodyLine
-              key={i}
-              slotProps={{ typography: { sx: { fontSize: `${fontSize}pt` } } }}
-              data={p}
-            />
-          ))}
+  if (card.type === "normal") {
+    const { name, manaCost, bodyText, typeLine } = card.face;
+    return (
+      <div className="card" ref={ref}>
+        <div className="topSide">
+          <Stack direction="row" justifyContent="space-between" alignItems="center">
+            <Name>{name}</Name>
+            {manaCost && (
+              <Stack
+              direction='row'
+              justifyContent="end"
+              alignItems="start"
+                sx={{
+                  "& > .ms-cost": {
+                    fontSize: "10px",
+                  },
+                }}
+              >
+                <ManaCost mana={manaCost} />
+              </Stack>
+            )}
+          </Stack>
+          <Type>{typeLine}</Type>
+          {bodyText &&
+          <div>
+            {bodyText.map((p, i) => (
+              <BodyLine
+                key={i}
+                slotProps={{ typography: { sx: { fontSize: `${fontSize}pt` } } }}
+                data={p}
+              />
+            ))}
+          </div>
+          }
+        </div>
+        <div className="botSide">
+          <BottomLine data={card.face} />
         </div>
       </div>
-      <div className="botSide">
-        <BottomLine data={card} />
+    );
+  }
+
+  const face = card.type === 'split' ? card.left : card.face;
+  const back = card.type === 'split' ? card.right : card.back;
+
+
+  return (
+      <div className="card" ref={ref}>
+        <div className="face">
+        <div className="topSide">
+          <Stack direction="row" justifyContent="space-between" alignItems="center">
+            <Name>{face.name}</Name>
+            {face.manaCost && (
+              <Stack
+              direction='row'
+              justifyContent="end"
+              alignItems="start"
+                sx={{
+                  "& > .ms-cost": {
+                    fontSize: "10px",
+                  },
+                }}
+              >
+                <ManaCost mana={face.manaCost} />
+              </Stack>
+            )}
+          </Stack>
+          <Type>{face.typeLine}</Type>
+          {face.bodyText &&
+          <div>
+            {face.bodyText.map((p, i) => (
+              <BodyLine
+                key={i}
+                slotProps={{ typography: { sx: { fontSize: `${fontSize}pt` } } }}
+                data={p}
+              />
+            ))}
+          </div>
+          }
+        </div>
+        <div className="botSide">
+          <BottomLine data={face} />
+        </div>
+        </div>
+        <div className="back">
+
+        <div className="topSide">
+          <Stack direction="row" justifyContent="space-between" alignItems="center">
+            <Name>{back.name}</Name>
+            {back.manaCost && (
+              <Stack
+              direction='row'
+              justifyContent="end"
+              alignItems="start"
+                sx={{
+                  "& > .ms-cost": {
+                    fontSize: "10px",
+                  },
+                }}
+              >
+                <ManaCost mana={back.manaCost} />
+              </Stack>
+            )}
+          </Stack>
+          <Type>{back.typeLine}</Type>
+          {back.bodyText &&
+          <div>
+            {back.bodyText.map((p, i) => (
+              <BodyLine
+                key={i}
+                slotProps={{ typography: { sx: { fontSize: `${fontSize}pt` } } }}
+                data={p}
+              />
+            ))}
+          </div>
+          }
+        </div>
+        <div className="botSide">
+          <BottomLine data={back} />
+        </div>
+        </div>
+
       </div>
-    </div>
+
+
   );
+
 };
 
 export const Print: FC = () => {
   const { cardList } = useContext(CardListContext)!;
-
   const cardListUnrolled = useMemo(() => {
-    const result: CardFace[] = [];
+    const result: Card[] = [];
     for (const { card, quantity } of cardList) {
       for (let i = 0; i < quantity; i++) {
         result.push(card);
@@ -100,8 +167,6 @@ export const Print: FC = () => {
     }
     return result;
   }, [cardList]);
-
-  // const MemoCard = React.memo(CardDisplay);
 
   return (
     <div className="page">

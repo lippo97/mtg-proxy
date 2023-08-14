@@ -18,6 +18,7 @@ export function parseFace(input: ParseIn): CardFace {
   const shared: any = {
     name: input.name,
     bodyText: parsed,
+    typeLine: input.type_line,
     ...(input.image_uris
       ? {
           imageUri: {
@@ -189,6 +190,7 @@ interface Metadata {
 
 interface Base {
   name: string;
+  typeLine: string;
   imageUri: {
     art: string;
     full: string;
