@@ -4,7 +4,7 @@ export type ParserResult = (
 	| { type: "planeswalker"; loyalty: number; value: ParsedToken[] }
 	| { type: "normal"; loyalty?: never; value: ParsedToken[] }
 	| { type: "keyword"; loyalty?: never; value: ParsedToken[], explanation: ParsedToken[] }
-	| { type: "activate"; loyalty?: never; cost: ParsedToken[], value: ParsedToken[] }
+	| { type: "activate"; loyalty?: never; cost: ParsedToken[], value: ParsedToken[], explanation?: ParsedToken[] }
 	| { type: "reminder"; loyalty?: never; value: ParsedToken[] }
 )[];
 
@@ -14,7 +14,7 @@ export type ParsedToken =
 	| { type: "comma" }
 	| { type: "colon" };
 
-type FSM = "S0" | "PW0" | "PW1" | "R" | "T" | "A";
+type FSM = "S0" | "PW0" | "PW1" | "R" | "T" | "A0" | "A1";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export function parse(tokens: Token[]): ParserResult {
@@ -29,7 +29,7 @@ export function parse(tokens: Token[]): ParserResult {
 						.map(([k, v]) => `${k} = ${v}`)
 						.join(", ") +
 					" }";
-				msg += `, expected ${_expected.join(", ")}, on ${s}, state = ${state}`;
+				msg += `, expected ${_expected.join(", ")}, on ${s}, state = ${state}, result = ${JSON.stringify(result)}`;
 			}
 			super(msg);
 		}
@@ -41,7 +41,7 @@ export function parse(tokens: Token[]): ParserResult {
 	const PW: { loyalty?: number; value: any[] } = { value: [] };
 	const R: { value: ParsedToken[] } = { value: [] };
 	const T: { value: ParsedToken[] } = { value: [] };
-	const A: { cost: ParsedToken[], value: ParsedToken[] } = { cost: [], value: [] };
+	const A: { cost: ParsedToken[], value: ParsedToken[], explanation: ParsedToken[] } = { cost: [], value: [], explanation: [] };
 
 	function flushPW() {
 		result.push({
@@ -65,7 +65,7 @@ export function parse(tokens: Token[]): ParserResult {
 	}
 
 	function flushA() {
-		result.push({ type: "activate", cost: A.cost.filter(x => x.type !== 'comma'), value: A.value });
+		result.push({ type: "activate", cost: A.cost.filter(x => x.type !== 'comma'), value: A.value, explanation: A.explanation.length > 0 ? A.explanation : undefined });
 	}
 
 	for (const token of tokens) {
@@ -124,20 +124,32 @@ export function parse(tokens: Token[]): ParserResult {
 				state = 'R';
 				R.value = [];
 			} else if (token.type === "colon") {
+				state = "A0";
 				A.cost = [...T.value];
 				A.value = [];
-				state = "A";
 			} else {
-				throw new ParseError(token, ["text", "symbol", "newline"]);
+				throw new ParseError(token, ["text", "symbol", "comma", "newline", "eof", "openParen", "colon"]);
 			}
-		} else if (state === 'A') {
+		} else if (state === 'A0') {
 			if (token.type === 'text' || token.type === 'symbol' || token.type === 'comma') {
 				A.value.push(token);
+			} else if (token.type === 'openParen') {
+				state = 'A1';
+				A.explanation = [];
 			} else if (token.type === 'newline' || token.type === 'eof') {
 				flushA();
 				state = "S0";
 			} else {
 				throw new ParseError(token, ['text', 'symbol', 'comma', 'newline', 'eof']);
+			}
+		} else if (state === 'A1') {
+			if (token.type === 'text' || token.type === 'symbol' || token.type === 'comma') {
+				A.explanation.push(token);
+			} else if (token.type === 'closeParen') {
+				flushA();
+				state = "S0";
+			} else {
+				throw new ParseError(token, ['text', 'symbol', 'comma', 'closeParen']);
 			}
 		}
 	}

@@ -59,8 +59,32 @@ interface PurchaseUris {
   cardhoarder: string;
 }
 
-export interface Card {
-  object: "card";
+export interface CardBase {
+  name: string;
+  mana_cost?: string;
+  type_line: string;
+  oracle_text: string;
+  power?: string;
+  toughness?: string;
+  loyalty?: string;
+  flavor_text?: string;
+  artist: string;
+  artist_id: string;
+  illustration_id: string;
+  image_uris: ImageUris;
+}
+
+export interface Summary {
+  name: string;
+  mana_cost?: string;
+  cmc?: number;
+  type_line: string;
+  colors: string[];
+  color_identity: string[];
+  keywords: string[];
+}
+
+export interface Metadata {
   id: string;
   oracle_id: string;
   multiverse_ids?: number[];
@@ -68,25 +92,14 @@ export interface Card {
   mtgo_foil_id?: number;
   tcgplayer_id?: number;
   cardmarket_id?: number;
-  name: string;
   lang: string;
   released_at: string;
   uri: string;
   scryfall_uri: string;
-  layout: string;
+  //
   highres_image: boolean;
   image_status: string;
-  image_uris: ImageUris;
-  mana_cost?: string;
-  cmc?: number;
-  type_line: string;
-  oracle_text: string;
-  power?: string;
-  toughness?: string;
-  loyalty?: string;
-  colors: string[];
-  color_identity: string[];
-  keywords: string[];
+  //
   legalities: Legalities;
   games: string[];
   reserved: boolean;
@@ -109,11 +122,7 @@ export interface Card {
   collector_number: string;
   digital: boolean;
   rarity: string;
-  flavor_text?: string;
   card_back_id: string;
-  artist: string;
-  artist_ids: string[];
-  illustration_id: string;
   border_color: string;
   frame: string;
   security_stamp?: string;
@@ -127,3 +136,35 @@ export interface Card {
   related_uris: RelatedUris;
   purchase_uris: PurchaseUris;
 }
+
+export type CardFace = { object: "card_face" } & CardBase;
+
+export type Normal = { layout: "normal" } & CardBase;
+
+export type DFC = { layout: "transform" } & {
+  card_faces: CardFace[];
+};
+
+export type MDFC = { layout: "modal_dfc" } & {
+  card_faces: CardFace[];
+};
+
+export type Adventure = { layout: "adventure" } & {
+  card_faces: Omit<CardFace, "image_uris">[];
+  image_uris: ImageUris;
+};
+
+export type Split = { layout: "split" } & {
+  card_faces: Omit<CardFace, "image_uris">[];
+  image_uris: ImageUris;
+};
+
+export type Card = { object: "card" } & (
+  | Normal
+  | DFC
+  | MDFC
+  | Adventure
+  | Split
+) &
+  Summary &
+  Metadata;

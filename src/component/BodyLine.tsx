@@ -66,6 +66,12 @@ export const BodyLine: FC<BodyLineProps> = ({ data, slots, slotProps }) => {
             curr,
           ])}
         :{" "}<Text data={data.value} />
+        {data.explanation &&
+          <Typography fontStyle="italic">
+            {" "}
+            (<Text data={data.explanation} />)
+          </Typography>
+        }
       </Typography>
     );
   }

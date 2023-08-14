@@ -18,7 +18,6 @@ export const Symbol: FC<SymbolProps> = ({ kind, shadow }) => {
       component="abbr"
       className={`ms ms-cost ${shadow ? "ms-shadow" : ""} ms-${className}`}
       sx={{
-        // mr: "2px",
         ml: "4px",
         ".comma + &": {
           ml: 0,

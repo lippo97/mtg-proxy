@@ -9,7 +9,7 @@ import React, {
 import { BodyLine } from "../component/BodyLine";
 import { ManaCost } from "../component/ManaCost";
 import { CardListContext } from "../context/CardList";
-import { Card } from "../types/generic";
+import { CardFace } from "../types/generic";
 import "./print.css";
 import { BottomLine } from "../component/BottomLine";
 import { Stack, Typography, styled } from "@mui/joy";
@@ -45,7 +45,7 @@ function useFitText2(): {
   return { ref, fontSize };
 }
 
-const CardDisplay: FC<{ card: Card }> = ({ card }) => {
+const CardDisplay: FC<{ card: CardFace }> = ({ card }) => {
   const { name, manaCost, bodyText, typeLine } = card;
   // const { fontSize, ref } = useFitText({ maxFontSize: 95, minFontSize: 60 });
   const { fontSize, ref } = useFitText2();
@@ -92,7 +92,7 @@ export const Print: FC = () => {
   const { cardList } = useContext(CardListContext)!;
 
   const cardListUnrolled = useMemo(() => {
-    const result: Card[] = [];
+    const result: CardFace[] = [];
     for (const { card, quantity } of cardList) {
       for (let i = 0; i < quantity; i++) {
         result.push(card);

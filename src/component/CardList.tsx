@@ -1,12 +1,12 @@
 import { ArrowLeft, ArrowRight } from "@mui/icons-material";
 import { Box, List, ListItem, Stack, Typography } from "@mui/joy";
-import { FC } from "react";
+import { FC, useCallback } from "react";
 import { Updater } from "use-immer";
-import { BaseColor } from "../types/colors";
+import { useDebounceEffect } from "../hooks/useDebounceEffect";
+import { BaseColor, Color } from "../types/colors";
 import { Entry } from "../types/generic";
 import { ArrowButton } from "./ArrowButton";
 import { Symbol } from "./Symbol";
-import { useDebounceEffect } from "../hooks/useDebounceEffect";
 
 interface CardListProps {
   readonly data: Entry[];
@@ -35,7 +35,6 @@ function calcBg(colors: BaseColor[]): string {
   }
 }
 
-
 const CardListItem: FC<{
   entry: Entry;
   onIncrement(): void;
@@ -49,6 +48,51 @@ const CardListItem: FC<{
     }
   });
 
+  const renderManaCost = useCallback((manaCost: Color[] | undefined) => {
+    return (
+      manaCost && manaCost.map((c, i) => <Symbol key={i} kind={c} shadow />)
+    );
+  }, []);
+
+  const Separator = () => (
+    <Box
+      sx={{
+        fontFamily: "Beleren",
+        fontWeight: 600,
+        fontSize: "1rem",
+        margin: "0 4px",
+      }}
+    >
+      //
+    </Box>
+  );
+
+  const ManaCost = () => {
+    if (entry.card.type === "normal") {
+      return renderManaCost(entry.card.face.manaCost);
+    }
+    if (entry.card.type === "split") {
+      return (
+        <>
+          <div className="cost-left">
+            {renderManaCost(entry.card.left.manaCost)}
+          </div>
+          <Separator />
+          <div className="cost-right">
+            {renderManaCost(entry.card.right.manaCost)}
+          </div>
+        </>
+      );
+    }
+    return (
+      <>
+        <div>{renderManaCost(entry.card.face.manaCost)}</div>
+        <Separator />
+        <div>{renderManaCost(entry.card.back.manaCost)}</div>
+      </>
+    );
+  };
+
   return (
     <ListItem
       sx={{
@@ -58,13 +102,13 @@ const CardListItem: FC<{
         display: "flex",
         flexDirection: "row",
         alignItems: "stretch",
-        mb: '1px',
+        mb: "1px",
         "&:last-of-type": {
           mb: 0,
         },
         ...(entry.quantity === 0 && {
-          opacity: '30%'
-        })
+          opacity: "30%",
+        }),
       }}
     >
       <ArrowButton onClick={onDecrement}>
@@ -92,15 +136,19 @@ const CardListItem: FC<{
             border: "1px solid white",
             borderRight: 0,
             color: "white",
-            display: "inline-block",
             margin: 0,
-            px: 1.5,
+            pl: 2,
+            pr: 1.5,
             py: 0,
             width: "20px",
             lineHeight: "34px",
             borderRadius: "10px / 20px",
             borderBottomRightRadius: 0,
             borderTopRightRadius: 0,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            // pl: '15px',
             "&::after": {
               content: '" "',
               width: "10px",
@@ -142,12 +190,14 @@ const CardListItem: FC<{
             {" "}
             {entry.card.name}
           </Typography>
-          <div>
-            {entry.card.manaCost &&
-              entry.card.manaCost.map((c, i) => (
-                <Symbol key={i} kind={c} shadow />
-              ))}
-          </div>
+          <Stack
+            direction="row"
+            flexWrap="wrap"
+            justifyContent="end"
+            alignItems="center"
+          >
+            <ManaCost />
+          </Stack>
         </Stack>
       </Stack>
       <ArrowButton onClick={onIncrement}>
@@ -177,7 +227,7 @@ export const CardList: FC<CardListProps> = ({ data, setData, setSelected }) => {
           onRemove={() => {
             setData((data) => {
               data.splice(i, 1);
-            })
+            });
           }}
           setSelected={setSelected}
         />

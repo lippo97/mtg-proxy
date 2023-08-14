@@ -1,6 +1,7 @@
 import axios from "axios";
 import { Card } from "../types/scryfall";
 import { Entry, ExportEntry, parseGeneric } from "../types/generic";
+import pThrottle from "p-throttle";
 
 interface Catalog {
   object: string;
@@ -28,19 +29,27 @@ export function getCardByName(query: GetCardByNameQuery): Promise<Card> {
 }
 
 export function exportCardList(entries: Entry[]): ExportEntry[] {
-  return entries.map(({card, quantity}) => ([ 
-    card.name,
-    quantity, 
-   ]));
+  return entries.map(({ card, quantity }) => [card.name, quantity]);
 }
 
-export function importCardList(entries: ExportEntry[]): Promise<Entry[]> {
+export function importCardList(
+  entries: ExportEntry[],
+  onLoaded?: (name: string) => void
+): Promise<Entry[]> {
+  const throttle = pThrottle({ interval: 1000, limit: 10 });
+  const throttledGetCard = throttle((name: string) =>
+    getCardByName({ exact: name })
+  );
+
   return Promise.all(
-    entries.map(([ name, quantity ]) =>
-      getCardByName({ exact: name }).then((card) => ({
-        card: parseGeneric(card),
-        quantity,
-      }))
+    entries.map(([name, quantity]) =>
+      throttledGetCard(name).then((card) => {
+        onLoaded && onLoaded(card.name);
+        return {
+          card: parseGeneric(card),
+          quantity,
+        };
+      })
     )
   );
 }

@@ -1,57 +1,70 @@
-import { MoreVert, Print, Save } from "@mui/icons-material";
+import { ContentPaste, MoreVert, Print, Save, Sort } from "@mui/icons-material";
 import {
   Autocomplete,
   Box,
+  Button,
   Container,
   Dropdown,
   Grid,
   IconButton,
+  LinearProgress,
   ListItemDecorator,
   Menu,
   MenuButton,
   MenuItem,
+  Modal,
+  ModalClose,
+  ModalOverflow,
   Sheet,
+  Textarea,
   Typography,
 } from "@mui/joy";
-import { FC, useContext, useEffect, useMemo, useState } from "react";
+import { FC, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "react-query";
 import { useNavigate } from "react-router-dom";
 import { useDebounce } from "use-debounce";
 import * as Scryfall from "../api/scryfall";
 import { CardList } from "../component/CardList";
 import { DisplayCard } from "../component/DisplayCard";
-import { Loading } from "../component/Loading";
 import { CardListContext } from "../context/CardList";
 import { useQueryParams } from "../hooks/useQueryParams";
-import { parseGeneric } from "../types/generic";
+import { ExportEntry, parseGeneric } from "../types/generic";
+import { parseDeckList, sortDeckList } from "../util/cards";
 import { decodeBase64ToData, encodeDataToBase64 } from "../util/strings";
 
 export const Main: FC = () => {
-  const [value, setValue] = useState<string | null>("Stormwing Entity");
+  const [value, setValue] = useState<string | null>(
+    "Spikefield Hazard // Spikefield Cave"
+  );
   const [inputValue, setInputValue] = useState("");
   const [debouncedValue] = useDebounce(inputValue, 300);
   const { cardList, setCardList } = useContext(CardListContext)!;
   const navigate = useNavigate();
   const queryParams = useQueryParams();
-  const [importing, setImporting] = useState(false);
+  const [importing, setImporting] = useState<number | null>(null);
+  const [total, setTotal] = useState<number | null>(null);
+  const [openModal, setOpenModal] = useState(false);
+  const importTextArea = useRef<HTMLTextAreaElement>(null);
+
+  async function loadState(entries: ExportEntry[]) {
+    setTotal(entries.length);
+    try {
+      const cardList = await Scryfall.importCardList(entries, () =>
+        setImporting((x) => (x ?? 0) + 1)
+      );
+      setCardList(cardList);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setImporting(null);
+    }
+  }
 
   useEffect(() => {
-    async function loadState(input: string) {
-      // W1siU3Rvcm13aW5nIEVudGl0eSIsM10sWyJHZW5lcmFsIEZlcnJvdXMgUm9raXJpYyIsM10sWyJNeXIgQmF0dGxlc3BoZXJlIiwyXSxbIk1vdW50YWluIiwyXSxbIk5pc3NhJ3MgSnVkZ21lbnQiLDFdLFsiVGhvdWdodHNlaXplIiwzXSxbIkFqYW5pIEdvbGRtYW5lIiwxXSxbIkZvcmVzdCIsMV0sWyJCYWxtb3IsIEJhdHRsZW1hZ2UgQ2FwdGFpbiIsNF0sWyJNb25hc3RlcnkgU3dpZnRzcGVhciIsMV0sWyJUaGlyZCBQYXRoIEljb25vY2xhc3QiLDRdLFsiT3B0Iiw0XSxbIkNvbnNpZGVyIiw0XSxbIkxpZ2h0bmluZyBCb2x0IiwyXSxbIkJvc2VpanUsIFdobyBFbmR1cmVzIiwxXSxbIkJvc2VpanUsIFdobyBTaGVsdGVycyBBbGwiLDFdXQ==
-      setImporting(true);
-      try {
-        const entries = decodeBase64ToData(input);
-        const cardList = await Scryfall.importCardList(entries);
-        setCardList(cardList);
-      } catch (err) {
-        console.error("Invalid data", data);
-      } finally {
-        setImporting(false);
-      }
-    }
     const data = queryParams.get("data");
     if (data) {
-      loadState(data);
+      const entries = decodeBase64ToData(data);
+      loadState(entries);
     }
   }, []);
 
@@ -100,6 +113,21 @@ export const Main: FC = () => {
 
   const print = () => {
     navigate("/print");
+  };
+
+  const sortCardList = () => {
+    setCardList((list) => {
+      sortDeckList(list);
+    });
+  };
+
+  const importCardList = () => {
+    if (importTextArea.current) {
+      const a = importTextArea.current.value;
+      const deck = parseDeckList(a);
+      setOpenModal(false);
+      loadState(deck);
+    }
   };
 
   const addCardDisabled = cardList.some((x) => x.card.name === card?.name);
@@ -151,16 +179,64 @@ export const Main: FC = () => {
                 </ListItemDecorator>{" "}
                 Save list
               </MenuItem>
+              <MenuItem onClick={() => setOpenModal(true)}>
+                <ListItemDecorator>
+                  <ContentPaste />
+                </ListItemDecorator>{" "}
+                Import
+              </MenuItem>
               <MenuItem onClick={print}>
                 <ListItemDecorator>
                   <Print />
                 </ListItemDecorator>{" "}
                 Print
               </MenuItem>
+              <MenuItem onClick={sortCardList}>
+                <ListItemDecorator>
+                  <Sort />
+                </ListItemDecorator>
+                Sort
+              </MenuItem>
             </Menu>
           </MenuButton>
         </Dropdown>
       </Sheet>
+      <Modal
+        open={openModal}
+        onClose={() => setOpenModal(false)}
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <ModalOverflow
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <Container maxWidth="md">
+            <Sheet
+              variant="outlined"
+              sx={{ minWidth: 400, px: 4, py: 2, mt: 2 }}
+            >
+              <ModalClose />
+              <Typography component="h2" level="h4">
+                Paste list here
+              </Typography>
+              <Textarea
+                minRows={12}
+                slotProps={{ textarea: { ref: importTextArea } }}
+                sx={{ mb: 2 }}
+                placeholder="4 Lightning Bolt&#10;2 Counterspell&#10;2 Mana Leak"
+              ></Textarea>
+              <Button onClick={importCardList}>Import</Button>
+            </Sheet>
+          </Container>
+        </ModalOverflow>
+      </Modal>
       <Container>
         <Autocomplete
           options={autocompleteQuery.data?.data ?? []}
@@ -180,12 +256,21 @@ export const Main: FC = () => {
         />
         <Grid container spacing={2}>
           <Grid xs={12} md={3}>
-            <Box sx={{ boxShadow: "lg", borderRadius: "4.75% / 3.5%" }}>
-              <img
-                src={card?.imageUri.full}
-                style={{ display: "block", borderRadius: "4.75% / 3.5%" }}
-              />
-            </Box>
+            {card && (
+              <Box sx={{ boxShadow: "lg", borderRadius: "4.75% / 3.5%" }}>
+                <img
+                  src={
+                    card.type === "normal" || card.type === "adventure"
+                      ? card.face.imageUri.full
+                      : card.type === "split"
+                      ? card.left.imageUri.full
+                      : card?.face.imageUri.full
+                  }
+                  style={{ display: "block", borderRadius: "4.75% / 3.5%" }}
+                  alt="FIXME"
+                />
+              </Box>
+            )}
           </Grid>
           <Grid xs={12} md={3}>
             {cardQuery.status === "success" && card && (
@@ -197,8 +282,13 @@ export const Main: FC = () => {
             )}
           </Grid>
           <Grid xs={12} md={6}>
-            {importing ? (
-              <Loading slotProps={{ stack: { mt: 2 } }} />
+            {importing !== null ? (
+              <Box p={2}>
+                <LinearProgress
+                  determinate
+                  value={(importing / total!) * 100}
+                />
+              </Box>
             ) : (
               <CardList
                 data={cardList}

@@ -1,9 +1,9 @@
 import { Stack, Typography } from "@mui/joy";
 import { FC } from "react";
-import { Card } from "../types/generic";
+import { CardFace } from "../types/generic";
 
 interface BottomLineProps {
-  readonly data: Card;
+  readonly data: Pick<CardFace, 'type' | 'loyalty' | 'power' | 'toughness'>;
 }
 
 export const BottomLine: FC<BottomLineProps> = ({ data }) => {
